@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>ใบงานที่ 2.2 ปฏิบัติการจำลองการตัดระบบน้ำ–ไฟฉุกเฉิน</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f5f8;--card:#fff;--ink:#1d2733;--mute:#5d6b7a;--line:#d9e0e7;--pri:#1f5fa8;--ok:#1e8a4c;--warn:#c77700;--bad:#c62828;--yel:#ffd54a}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Sarabun',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.5}
+#app{max-width:760px;margin:0 auto;padding:12px 12px 90px}
+h1{font-size:1.3rem;margin:.2rem 0}
+h2{font-size:1.15rem;margin:.2rem 0 .4rem}
+h3{font-size:1rem;margin:.6rem 0 .3rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0}
+.mute{color:var(--mute);font-size:.92rem}
+.btn{display:inline-block;border:none;border-radius:10px;padding:11px 16px;font:inherit;font-weight:600;cursor:pointer;background:var(--pri);color:#fff;margin:4px 4px 4px 0}
+.btn.sec{background:#e7edf4;color:var(--ink)}
+.btn.ok{background:var(--ok)}
+.btn.bad{background:var(--bad)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.block{display:block;width:100%}
+input,select{font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:9px;width:100%;background:#fff}
+label{font-weight:600;font-size:.93rem}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row>*{flex:1 1 140px}
+.mem{display:grid;grid-template-columns:1fr 80px;gap:6px;margin-bottom:10px}
+.role{font-size:.85rem;color:var(--pri);font-weight:700;grid-column:1/3;margin-bottom:-4px}
+.head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.who{background:#eaf2fc;border-radius:10px;padding:8px 10px;font-size:.93rem}
+.who b{color:var(--pri)}
+.timer{height:10px;background:#e3e8ee;border-radius:6px;overflow:hidden;margin:6px 0 2px}
+.timer>div{height:100%;background:var(--ok);transition:width .2s linear}
+.tline{display:flex;justify-content:space-between;font-size:.88rem;color:var(--mute)}
+.prog{display:flex;gap:4px;margin:6px 0}
+.prog span{flex:1;height:6px;border-radius:4px;background:#dfe5ec}
+.prog span.d{background:var(--ok)}.prog span.c{background:var(--pri)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.chip{border-radius:20px;padding:4px 10px;font-size:.85rem;font-weight:600;background:#fdecea;color:var(--bad)}
+.chip.g{background:#e6f4ec;color:var(--ok)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:8px}
+.item{border:2px solid var(--line);border-radius:12px;background:#fff;padding:6px;text-align:center;cursor:pointer;font-size:.86rem;line-height:1.3;font-family:inherit;color:var(--ink)}
+.item.sel{border-color:var(--pri);background:#eaf2fc}
+.item svg{width:64px;height:64px;display:block;margin:0 auto 3px}
+.opt{display:block;width:100%;text-align:left;border:2px solid var(--line);background:#fff;border-radius:12px;padding:11px 12px;margin:6px 0;font:inherit;cursor:pointer;color:var(--ink)}
+.opt:active{background:#eaf2fc}
+.scene{width:100%;height:auto;display:block;background:#fbfcfd;border:1px solid var(--line);border-radius:12px;touch-action:manipulation}
+.hit{cursor:pointer}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.ctrl .box{flex:1 1 200px;border:1px solid var(--line);border-radius:12px;padding:8px;background:#fff}
+.ctrl .box b{display:block;font-size:.93rem;margin-bottom:4px}
+.bar{height:8px;background:#e3e8ee;border-radius:5px;overflow:hidden}
+.bar>div{height:100%;background:var(--pri)}
+input[type=range]{padding:0;height:34px}
+#toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);max-width:94%;width:560px;padding:12px 14px;border-radius:12px;color:#fff;font-weight:600;display:none;z-index:50;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+#modal{position:fixed;inset:0;background:rgba(10,20,30,.55);display:none;align-items:center;justify-content:center;z-index:60;padding:14px}
+#modal .in{background:#fff;border-radius:16px;max-width:520px;width:100%;padding:18px;max-height:90vh;overflow:auto}
+.danger-h{color:var(--bad);font-size:1.25rem;font-weight:700}
+.ok-h{color:var(--ok);font-size:1.2rem;font-weight:700}
+.sign{border:4px solid #b71c1c;background:#fff8e1;border-radius:10px;padding:10px;text-align:center}
+.sign .t{background:#c62828;color:#fff;font-weight:700;border-radius:6px;padding:6px;margin-bottom:6px}
+.sign p{margin:4px 0;font-size:.92rem}
+.olist button{display:block;width:100%;text-align:left;margin:6px 0;border:2px solid var(--line);border-radius:12px;padding:10px;background:#fff;font:inherit;cursor:pointer;color:var(--ink)}
+.olist button.done{background:#e6f4ec;border-color:var(--ok);cursor:default}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-width:260px;margin:6px auto}
+.pad button{font:inherit;font-size:1.3rem;padding:10px;border-radius:10px;border:1px solid var(--line);background:#fff;cursor:pointer}
+.disp{font-size:1.6rem;text-align:center;letter-spacing:4px;border:1px solid var(--line);border-radius:10px;padding:6px;background:#fff;min-height:48px;max-width:260px;margin:0 auto}
+table{border-collapse:collapse;width:100%;font-size:.84rem}
+th,td{border:1px solid var(--line);padding:4px 5px;text-align:center;vertical-align:middle}
+th{background:#eef2f6}
+td.l{text-align:left}
+.sumhead{background:linear-gradient(135deg,#1f5fa8,#2f80d1);color:#fff;border-radius:14px;padding:12px 14px}
+.sumhead .mute{color:#dbe8f7}
+.big{font-size:1.6rem;font-weight:700}
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}
+.kpi div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px;text-align:center;font-size:.8rem}
+.kpi b{display:block;font-size:1.15rem}
+.pass{color:var(--ok)}.fail{color:var(--bad)}
+.note{background:#fff8e1;border-left:4px solid var(--warn);padding:8px 10px;border-radius:8px;font-size:.9rem}
+@keyframes spray{0%{opacity:1;transform:translate(0,0)}100%{opacity:0;transform:translate(var(--dx),var(--dy))}}
+.drop{animation:spray .7s linear infinite}
+@keyframes zap{0%,100%{opacity:1}50%{opacity:.15}}
+.zap{animation:zap .35s linear infinite}
+@media (max-width:480px){.kpi{grid-template-columns:repeat(2,1fr)}table{font-size:.76rem}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast"></div>
+<div id="modal"><div class="in" id="modalIn"></div></div>
+<script>
+/* =========================================================
+   ใบงานที่ 2.2 ปฏิบัติการจำลองการตัดระบบน้ำ–ไฟฉุกเฉิน และการช่วยเหลือผู้ประสบภัย
+   วิชางานช่างพื้นฐานในชีวิตประจำวัน ง 30275 ม.4  (แผนการจัดการเรียนรู้ที่ 2)
+   ========================================================= */
+const ROLES=['หัวหน้าทีมความปลอดภัย','ผู้ปฏิบัติการระบบไฟฟ้า','ผู้ปฏิบัติการระบบประปาและอุปกรณ์กู้ภัย','ผู้ตรวจสอบขั้นตอนและดูแลความสะอาดพื้นที่'];
+const LIMIT=30; // เกณฑ์เวลา (วินาที) ตามใบงาน
+const STAGES=[
+ {id:'ppe',  short:'เตรียมอุปกรณ์ป้องกัน', name:'เตรียมความพร้อมและอุปกรณ์ป้องกัน', role:0, timed:false},
+ {id:'sign', short:'ออกแบบป้าย', name:'ออกแบบป้ายแจ้งเตือนนิรภัย',          role:1, timed:false},
+ {id:'s1',   short:'สถ.1 ตัดไฟ', name:'สถานการณ์ที่ 1 ตัดไฟเพื่อซ่อมบำรุง', role:1, timed:true},
+ {id:'s2',   short:'สถ.2 ตัดน้ำ', name:'สถานการณ์ที่ 2 ท่อประปาใต้อ่างแตก',  role:2, timed:true},
+ {id:'s3',   short:'สถ.3 ช่วยคนถูกไฟดูด', name:'สถานการณ์ที่ 3 ช่วยผู้ถูกไฟฟ้าดูด',   role:0, timed:true, role2:2},
+ {id:'reset',short:'คืนสภาพ/ขีดจำกัด', name:'คืนสภาพชุดฝึกและประเมินขีดจำกัด',     role:3, timed:false}
+];
+const KEY='ws22_ng30275_v1';
+let S=null;          // สถานะทั้งหมด
+let L={};            // สถานะภายในด่านปัจจุบัน
+let tStart=0,tick=null,flowT=null;
+
+function newState(){return{group:'',cls:'',members:[0,1,2,3].map(()=>({name:'',no:''})),cur:-1,
+ rec:Object.fromEntries(STAGES.map(s=>[s.id,{restarts:0,minor:0,danger:0,hints:0,lastTime:0,totalTime:0,done:false,errs:[]}])),
+ started:null,finished:null}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function load(){try{const j=localStorage.getItem(KEY);return j?JSON.parse(j):null}catch(e){return null}}
+function clearSave(){try{localStorage.removeItem(KEY)}catch(e){}}
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const mName=i=>S.members[i].name||('คนที่ '+(i+1));
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+/* ---------- แจ้งเตือน ---------- */
+let toastT=null;
+function toast(msg,type){const t=$('toast');t.innerHTML=msg;t.style.background=type==='ok'?'#1e8a4c':type==='minor'?'#c77700':'#1f5fa8';t.style.display='block';clearTimeout(toastT);toastT=setTimeout(()=>t.style.display='none',type==='minor'?4200:2600)}
+function modal(html){$('modalIn').innerHTML=html;$('modal').style.display='flex'}
+function closeModal(){$('modal').style.display='none'}
+
+function rec(){return S.rec[STAGES[S.cur].id]}
+function logErr(kind,msg){const r=rec();r.errs.push({k:kind,m:msg});if(kind==='minor')r.minor++;else r.danger++;save()}
+function ok(msg){toast('✅ '+msg,'ok')}
+function minor(msg){logErr('minor',msg);toast('⚠️ ทำผิด (หักคะแนน): '+msg,'minor');updateHUD()}
+function danger(msg){
+ logErr('danger',msg);stopTimer(false);rec().restarts++;save();updateHUD();
+ modal(`<div class="danger-h">⛔ อันตราย! ต้องเริ่มด่านนี้ใหม่</div><p>${msg}</p><p class="mute">ระบบบันทึกการเริ่มใหม่และหักคะแนนแล้ว ให้ทีมทบทวนขั้นตอนก่อนลงมือใหม่</p><button class="btn bad block" onclick="closeModal();openStage(S.cur)">เริ่มด่านนี้ใหม่</button>`)}
+
+/* ---------- เวลา ---------- */
+function startTimer(){tStart=performance.now();clearInterval(tick);tick=setInterval(updateHUD,200)}
+function elapsed(){return tStart?(performance.now()-tStart)/1000:0}
+function stopTimer(finished){clearInterval(tick);const e=elapsed();const r=rec();r.totalTime+=e;if(finished)r.lastTime=e;tStart=0;save();return e}
+function updateHUD(){
+ const st=STAGES[S.cur];if(!st)return;const e=elapsed();
+ const tb=$('tbar'),tt=$('ttxt');
+ if(tb&&st.timed){const p=Math.min(100,e/LIMIT*100);tb.style.width=p+'%';tb.style.background=e>LIMIT?'#c62828':e>LIMIT*0.7?'#c77700':'#1e8a4c'}
+ if(tt)tt.textContent=e.toFixed(1)+' วินาที'+(st.timed?(e>LIMIT?' (เกินเกณฑ์ 30 วินาที)':' / เกณฑ์ไม่เกิน 30 วินาที'):'');
+ const er=$('errc');if(er){const r=rec();er.textContent=`ผิด ${r.minor} ครั้ง · เริ่มใหม่ ${r.restarts} ครั้ง · คำใบ้ ${r.hints} ครั้ง`}
+}
+
+/* ---------- ไอคอนอุปกรณ์ (ภาพ 2D) ---------- */
+const IC={
+shoe:`<svg viewBox="0 0 64 64"><path d="M8 40 L8 22 Q8 18 13 18 L24 18 Q27 30 40 32 L54 35 Q60 37 60 43 L60 46 L8 46 Z" fill="#5d4037"/><rect x="6" y="45" width="56" height="7" rx="3" fill="#222"/><path d="M14 24h8M14 29h10" stroke="#a1887f" stroke-width="2"/></svg>`,
+sandal:`<svg viewBox="0 0 64 64"><ellipse cx="32" cy="44" rx="27" ry="9" fill="#f2b84b"/><ellipse cx="32" cy="42" rx="25" ry="7" fill="#ffd77a"/><path d="M18 42 Q30 24 42 42" stroke="#1565c0" stroke-width="4" fill="none"/></svg>`,
+goggles:`<svg viewBox="0 0 64 64"><path d="M4 30 Q4 22 14 22 L50 22 Q60 22 60 30 L60 36 Q60 44 50 44 L40 44 L34 38 L30 38 L24 44 L14 44 Q4 44 4 36 Z" fill="#90caf9" stroke="#1e3a5f" stroke-width="3"/><path d="M2 30 L-2 28M62 30 L66 28" stroke="#333" stroke-width="3"/><path d="M12 28 L20 26" stroke="#fff" stroke-width="2"/></svg>`,
+gloves:`<svg viewBox="0 0 64 64"><path d="M18 58 L18 34 L12 22 Q10 17 15 16 L21 26 L21 10 Q21 6 25 6 Q28 6 28 10 L28 24 L29 6 Q29 3 33 3 Q36 3 36 7 L36 24 L38 9 Q38 6 42 6 Q45 7 45 10 L44 28 L46 16 Q47 13 50 14 Q53 15 52 18 L48 40 L46 58 Z" fill="#f57c00" stroke="#7a3b00" stroke-width="2"/><rect x="17" y="50" width="30" height="8" fill="#455a64"/></svg>`,
+ring:`<svg viewBox="0 0 64 64"><circle cx="22" cy="34" r="12" fill="none" stroke="#c9a227" stroke-width="5"/><circle cx="22" cy="22" r="4" fill="#80deea"/><rect x="38" y="16" width="20" height="32" rx="5" fill="#9e9e9e"/><circle cx="48" cy="32" r="8" fill="#eceff1" stroke="#616161" stroke-width="2"/><path d="M48 32 L48 27M48 32 L51 33" stroke="#333" stroke-width="1.5"/></svg>`,
+tester:`<svg viewBox="0 0 64 64"><rect x="4" y="28" width="30" height="10" rx="3" fill="#d32f2f"/><rect x="12" y="30" width="10" height="6" rx="2" fill="#ffcc80" opacity=".8"/><rect x="34" y="31" width="24" height="4" fill="#b0bec5"/><path d="M58 31 L62 33 L58 35 Z" fill="#78909c"/><circle cx="6" cy="33" r="3" fill="#ffeb3b"/></svg>`,
+signi:`<svg viewBox="0 0 64 64"><path d="M32 4 L32 12" stroke="#555" stroke-width="2"/><rect x="8" y="12" width="48" height="44" rx="4" fill="#fff8e1" stroke="#b71c1c" stroke-width="3"/><rect x="12" y="16" width="40" height="11" fill="#c62828"/><path d="M28 18 L36 18 L32 25 Z" fill="#ffd54a"/><path d="M14 34h36M14 40h36M14 46h26" stroke="#555" stroke-width="2"/></svg>`,
+pvc:`<svg viewBox="0 0 64 64"><g transform="rotate(-35 32 32)"><rect x="-2" y="26" width="68" height="12" rx="3" fill="#eceff1" stroke="#90a4ae" stroke-width="2"/><ellipse cx="66" cy="32" rx="3" ry="6" fill="#cfd8dc" stroke="#90a4ae"/><path d="M6 30 L56 30" stroke="#fff" stroke-width="2"/></g></svg>`,
+broom:`<svg viewBox="0 0 64 64"><g transform="rotate(-35 32 32)"><rect x="-2" y="29" width="46" height="6" rx="2" fill="#a1662f"/><path d="M44 24 L66 18 L66 46 L44 40 Z" fill="#d4b06a" stroke="#8d6e3a"/></g></svg>`,
+steel:`<svg viewBox="0 0 64 64"><g transform="rotate(-35 32 32)"><rect x="-2" y="26" width="68" height="12" rx="3" fill="#607d8b" stroke="#37474f" stroke-width="2"/><path d="M6 29 L56 29" stroke="#b0bec5" stroke-width="2"/></g></svg>`,
+wetwood:`<svg viewBox="0 0 64 64"><g transform="rotate(-35 32 32)"><rect x="0" y="27" width="64" height="10" rx="3" fill="#6d4c2f"/></g><path d="M14 46 q2 4 0 6 q-2 -2 0 -6M28 40 q2 4 0 6 q-2 -2 0 -6M44 30 q2 4 0 6 q-2 -2 0 -6" fill="#29b6f6"/></svg>`,
+umbrella:`<svg viewBox="0 0 64 64"><path d="M6 30 Q32 2 58 30 Z" fill="#283593"/><path d="M32 30 L32 54 Q32 60 26 58" stroke="#757575" stroke-width="3" fill="none"/></svg>`,
+cloth:`<svg viewBox="0 0 64 64"><defs><pattern id="pk" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="#c62828"/><rect width="4" height="4" fill="#1565c0"/><rect x="4" y="4" width="4" height="4" fill="#fff"/></pattern></defs><path d="M6 14 L58 14 L54 50 L10 50 Z" fill="url(#pk)" stroke="#555"/></svg>`,
+rope:`<svg viewBox="0 0 64 64"><ellipse cx="32" cy="32" rx="22" ry="14" fill="none" stroke="#c8a165" stroke-width="5"/><ellipse cx="32" cy="32" rx="14" ry="8" fill="none" stroke="#b08850" stroke-width="5"/><path d="M50 40 L60 54" stroke="#c8a165" stroke-width="5"/></svg>`,
+wetcloth:`<svg viewBox="0 0 64 64"><path d="M8 12 L56 12 L52 44 L12 44 Z" fill="#81d4fa" stroke="#0277bd"/><path d="M20 48 q2 4 0 7 q-2 -3 0 -7M32 48 q2 4 0 7 q-2 -3 0 -7M44 48 q2 4 0 7 q-2 -3 0 -7" fill="#29b6f6"/></svg>`,
+chain:`<svg viewBox="0 0 64 64"><g fill="none" stroke="#78909c" stroke-width="4"><ellipse cx="14" cy="32" rx="9" ry="6"/><ellipse cx="28" cy="32" rx="6" ry="9"/><ellipse cx="42" cy="32" rx="9" ry="6"/><ellipse cx="55" cy="32" rx="6" ry="9"/></g></svg>`,
+hand:`<svg viewBox="0 0 64 64"><path d="M20 58 L20 34 L14 24 Q12 19 17 18 L23 27 L23 10 Q23 6 27 6 Q30 6 30 10 L30 25 L31 7 Q31 3 35 3 Q38 4 38 8 L38 25 L40 10 Q41 7 44 8 Q47 9 46 12 L45 30 L48 21 Q50 18 53 20 Q55 22 53 26 L46 44 L44 58 Z" fill="#f2c9a0" stroke="#a5704b" stroke-width="2"/></svg>`
+};
+
+/* ---------- หน้าลงทะเบียน ---------- */
+function viewReg(){
+ const saved=load();
+ let resume='';
+ if(saved&&saved.started&&!saved.finished&&saved.cur>=0){resume=`<div class="card note">พบข้อมูลที่ทำค้างไว้ของ <b>กลุ่มที่ ${esc(saved.group)}</b> (ถึงด่าน ${saved.cur+1}/6)<br><button class="btn" onclick="resumeSaved()">ทำต่อจากเดิม</button><button class="btn sec" onclick="clearSave();render()">เริ่มใหม่ทั้งหมด</button></div>`}
+ $('app').innerHTML=`
+ <div class="card" style="text-align:center">
+  <div class="mute">วิชางานช่างพื้นฐานในชีวิตประจำวัน (ง 30275) ชั้น ม.4 · แผนการจัดการเรียนรู้ที่ 2</div>
+  <h1>ใบงานที่ 2.2 ปฏิบัติการจำลองการตัดระบบน้ำ–ไฟฉุกเฉิน<br>และการช่วยเหลือผู้ประสบภัย</h1>
+  <div class="mute">เล่นเป็นกลุ่ม 4 คน · 1 เครื่องต่อกลุ่ม · ผลัดกันลงมือตามบทบาท</div>
+ </div>${resume}
+ <div class="card">
+  <h2>ลงทะเบียนกลุ่ม</h2>
+  <div class="row"><div><label>กลุ่มที่</label><input id="g" inputmode="numeric" placeholder="เช่น 3"></div>
+  <div><label>ชั้น</label><input id="c" placeholder="เช่น ม.4/1"></div></div>
+  <h3>รายชื่อสมาชิกและบทบาทหน้าที่</h3>
+  ${ROLES.map((r,i)=>`<div class="mem"><div class="role">คนที่ ${i+1} · ${r}</div><input id="n${i}" placeholder="ชื่อ-นามสกุล"><input id="x${i}" inputmode="numeric" placeholder="เลขที่"></div>`).join('')}
+  <button class="btn block" onclick="register()">ลงทะเบียนและอ่านคำชี้แจง</button>
+ </div>`;
+}
+function resumeSaved(){S=load();openStage(S.cur)}
+function register(){
+ const g=$('g').value.trim(),c=$('c').value.trim();
+ const m=[0,1,2,3].map(i=>({name:$('n'+i).value.trim(),no:$('x'+i).value.trim()}));
+ if(!g||!c||m.some(x=>!x.name||!x.no)){toast('กรุณากรอกกลุ่ม ชั้น ชื่อ-นามสกุล และเลขที่ ให้ครบทั้ง 4 คน','minor');return}
+ S=newState();S.group=g;S.cls=c;S.members=m;save();viewIntro();
+}
+function viewIntro(){
+ $('app').innerHTML=`<div class="card"><h2>คำชี้แจง</h2>
+ <p>กลุ่มที่ <b>${esc(S.group)}</b> ชั้น ${esc(S.cls)} จะปฏิบัติการจำลองทั้งหมด <b>6 ด่าน</b> ตามใบงานที่ 2.2 แต่ละด่านมี “ผู้ลงมือ” ตามบทบาท ให้ส่งเครื่องให้คนนั้นเป็นคนกด เพื่อนในกลุ่มช่วยสังเกตและเตือนได้</p>
+ <table><tr><th>ด่าน</th><th>ผู้ลงมือ</th><th>จับเวลา</th></tr>
+ ${STAGES.map((s,i)=>`<tr><td class="l">${i+1}. ${s.name}</td><td class="l">${esc(mName(s.role))}${s.role2!=null?' + '+esc(mName(s.role2)):''}</td><td>${s.timed?'≤ 30 วินาที':'-'}</td></tr>`).join('')}
+ </table>
+ <h3>กติกา</h3>
+ <ul>
+  <li><b>ไม่มีการบอกบท</b> ให้ทีมคิดลำดับขั้นตอนเอง ตามใบความรู้ที่ 1.2</li>
+  <li><b>ทำผิดขั้นตอนทั่วไป</b> ระบบจะเตือนพร้อมเหตุผลและหักคะแนน แล้วทำต่อได้</li>
+  <li><b>ทำผิดในจุดอันตรายถึงชีวิต</b> (เช่น ใช้มือเปล่าจับผู้ถูกไฟดูด) ต้อง <b>เริ่มด่านนั้นใหม่</b> และหักคะแนน</li>
+  <li>ปุ่ม <b>คำใบ้</b> ใช้ได้ แต่จะถูกบันทึกและมีผลต่อคะแนน</li>
+  <li>สถานการณ์ที่ 1–3 จับเวลา เกณฑ์ไม่เกิน 30 วินาที (เริ่มจับเมื่อกด “เริ่มปฏิบัติ”)</li>
+  <li>จบแล้วให้ <b>แคปหน้าจอสรุปผล</b> ส่งครู</li>
+ </ul>
+ <button class="btn block" onclick="S.started=new Date().toISOString();save();openStage(0)">เริ่มด่านที่ 1</button></div>`;
+}
+
+/* ---------- โครงหน้าด่าน ---------- */
+function frame(body){
+ const st=STAGES[S.cur];
+ return `<div class="card">
+ <div class="prog">${STAGES.map((s,i)=>`<span class="${i<S.cur?'d':i===S.cur?'c':''}"></span>`).join('')}</div>
+ <div class="head"><h2>ด่าน ${S.cur+1}/6 · ${st.name}</h2><button class="btn sec" onclick="hint()">💡 คำใบ้</button></div>
+ <div class="who">ผู้ลงมือ: <b>${esc(mName(st.role))}</b> (${ROLES[st.role]})${st.role2!=null?`<br>ผู้ช่วยเตรียมอุปกรณ์ฉนวน: <b>${esc(mName(st.role2))}</b>`:''}<br>ผู้ตรวจสอบขั้นตอน: <b>${esc(mName(3))}</b></div>
+ ${st.timed?`<div class="timer"><div id="tbar" style="width:0"></div></div>`:''}
+ <div class="tline"><span id="ttxt"></span><span id="errc"></span></div>
+ </div>${body}`;
+}
+function openStage(i){
+ S.cur=i;save();closeModal();
+ if(i>=STAGES.length){finishAll();return}
+ const st=STAGES[i];L={};
+ STG[st.id].init();
+ if(st.timed){ // หน้าโจทย์ก่อนเริ่มจับเวลา
+  $('app').innerHTML=frame(`<div class="card"><h3>โจทย์สถานการณ์</h3>${STG[st.id].brief}<button class="btn ok block" onclick="L.go=1;startTimer();draw()">▶ เริ่มปฏิบัติ (เริ่มจับเวลา)</button></div>`);updateHUD();
+ } else {startTimer();draw()}
+ window.scrollTo(0,0);
+}
+function draw(){const st=STAGES[S.cur];$('app').innerHTML=frame(STG[st.id].view());updateHUD()}
+function hint(){const st=STAGES[S.cur];if(st.timed&&!L.go){toast('กด “เริ่มปฏิบัติ” ก่อน');return}
+ rec().hints++;save();updateHUD();modal(`<div class="ok-h">💡 คำใบ้</div><p>${STG[st.id].hint()}</p><button class="btn block" onclick="closeModal()">เข้าใจแล้ว</button>`)}
+function stageDone(msg){
+ const e=stopTimer(true);const r=rec();r.done=true;save();
+ const st=STAGES[S.cur];
+ modal(`<div class="ok-h">✅ ผ่านด่าน ${S.cur+1}: ${st.name}</div><p>${msg}</p>
+ <p class="mute">เวลา ${e.toFixed(1)} วินาที${st.timed?(e<=LIMIT?' (ผ่านเกณฑ์เวลา)':' (เกินเกณฑ์ 30 วินาที)'):''} · ทำผิด ${r.minor} ครั้ง · เริ่มใหม่ ${r.restarts} ครั้ง · ใช้คำใบ้ ${r.hints} ครั้ง</p>
+ ${S.cur+1<STAGES.length?`<p>ด่านต่อไป ผู้ลงมือคือ <b>${esc(mName(STAGES[S.cur+1].role))}</b> ส่งเครื่องให้ได้เลย</p>`:''}
+ <button class="btn ok block" onclick="openStage(S.cur+1)">${S.cur+1<STAGES.length?'ไปด่านต่อไป':'ดูสรุปผล'}</button>`);
+}
+
+/* =========================================================
+   ด่านต่าง ๆ
+   ========================================================= */
+const STG={};
+
+/* ----- ด่าน 1 เตรียมความพร้อม ----- */
+const PPE_ITEMS=[
+ {k:'shoe',n:'รองเท้าหุ้มส้นพื้นยาง (แห้ง)',ok:true},
+ {k:'goggles',n:'แว่นตานิรภัย',ok:true},
+ {k:'gloves',n:'ถุงมือช่าง',ok:true},
+ {k:'tester',n:'ไขควงเช็คไฟ',ok:true},
+ {k:'signi',n:'ป้าย “ห้ามสับสวิตช์ กำลังซ่อมบำรุง”',ok:true},
+ {k:'pvc',n:'ท่อพีวีซีแห้ง ยาว 1.5 ม.',ok:true},
+ {k:'cloth',n:'ผ้าขาวม้าแห้ง',ok:true},
+ {k:'sandal',n:'รองเท้าแตะ',ok:false,why:'รองเท้าแตะไม่หุ้มส้น ไม่ป้องกันของตกใส่เท้า และเท้าสัมผัสพื้นเปียกได้ง่าย'},
+ {k:'ring',n:'สวมแหวนและนาฬิกาโลหะ',ok:false,why:'เครื่องประดับโลหะเป็นตัวนำไฟฟ้า ต้องถอดออกก่อนปฏิบัติงาน'},
+ {k:'steel',n:'ท่อเหล็ก',ok:false,why:'ท่อเหล็กเป็นตัวนำไฟฟ้า ใช้ช่วยผู้ถูกไฟดูดไม่ได้'},
+ {k:'wetcloth',n:'ผ้าชุบน้ำ',ok:false,why:'ผ้าเปียกนำไฟฟ้าได้ ต้องใช้ผ้าที่แห้งสนิทเท่านั้น'}
+];
+STG.ppe={
+ init(){L.order=shuffle(PPE_ITEMS);L.sel={}},
+ view(){return `<div class="card"><p><b>หัวหน้าทีม</b> ตรวจความพร้อมก่อนปฏิบัติงาน: แตะเลือก <b>เฉพาะ</b> อุปกรณ์ที่ทีมต้องสวมใส่และเตรียมไว้สำหรับฝึกทั้ง 3 สถานการณ์ แล้วกดยืนยัน</p>
+ <div class="grid">${L.order.map(it=>`<button class="item ${L.sel[it.k]?'sel':''}" onclick="L.sel['${it.k}']=!L.sel['${it.k}'];draw()">${IC[it.k]}${it.n}</button>`).join('')}</div>
+ <button class="btn block" style="margin-top:10px" onclick="STG.ppe.check()">ยืนยันการเตรียมความพร้อม</button></div>`},
+ check(){
+  const wrong=PPE_ITEMS.filter(i=>!i.ok&&L.sel[i.k]);const miss=PPE_ITEMS.filter(i=>i.ok&&!L.sel[i.k]);
+  if(!wrong.length&&!miss.length){stageDone('ทีมแต่งกายรัดกุม ถอดเครื่องประดับโลหะ สวมรองเท้าพื้นยาง แว่นตานิรภัย ถุงมือช่าง และเตรียมอุปกรณ์ฉนวนแห้งครบ');return}
+  if(wrong.length)minor('เลือกสิ่งที่ไม่ปลอดภัย: '+wrong.map(w=>w.n+' — '+w.why).join(' / '));
+  else minor('ยังเตรียมไม่ครบ ขาดอีก '+miss.length+' รายการ ทบทวนใบความรู้ ตอนที่ 1');
+ },
+ hint(){return 'ก่อนปฏิบัติงาน: แต่งกายรัดกุม <b>ไม่สวมเครื่องประดับโลหะ</b> สวมรองเท้าหุ้มส้นพื้นยางที่แห้ง แว่นตานิรภัย ถุงมือช่าง และเตรียมอุปกรณ์ตามใบงาน (ไขควงเช็คไฟ ป้ายแจ้งเตือน ท่อพีวีซีแห้ง ผ้าขาวม้าแห้ง) — ทุกอย่างที่ใช้ช่วยคนต้อง “แห้ง” และ “เป็นฉนวน”'}
+};
+
+/* ----- ด่าน 2 ออกแบบป้าย ----- */
+const SIGN_F=[
+ {k:'h',lab:'หัวป้าย',opts:['อันตราย! ห้ามสับสวิตช์เปิดไฟเด็ดขาด กำลังปฏิบัติงานซ่อมบำรุงระบบไฟฟ้า','กรุณาปิดไฟทุกครั้งเมื่อไม่ใช้งาน','ระวัง! พื้นลื่น'],ok:0,why:'หัวป้ายต้องบอกชัดว่า “ห้ามสับสวิตช์” และกำลังซ่อมบำรุง'},
+ {k:'p',lab:'พื้นที่/จุดที่กำลังซ่อม',opts:['โคมไฟแสงสว่างและเต้ารับห้องปฏิบัติการ (วงจรย่อยที่ 2)','ทั้งอาคาร (ไม่ต้องระบุวงจร)','เครื่องปรับอากาศ (วงจรย่อยที่ 3)'],ok:0,why:'ต้องระบุจุดที่ซ่อมให้ตรงกับวงจรที่ตัดจริง (วงจรย่อยที่ 2)'},
+ {k:'c',lab:'แนวทางก่อนเปิดไฟคืน',opts:['ต้องได้รับอนุญาตจากหัวหน้าทีมซ่อมบำรุง และผู้แขวนถอดป้ายนี้ออกด้วยตนเองเท่านั้น','ใครก็ถอดป้ายได้ เมื่อเห็นว่าซ่อมเสร็จแล้ว','เปิดไฟได้เองเมื่อผ่านไป 1 ชั่วโมง'],ok:0,why:'ป้ายต้องถอดโดยผู้แขวนและได้รับอนุญาตจากหัวหน้าทีมเท่านั้น เพื่อไม่ให้ใครจ่ายไฟขณะยังมีคนซ่อม'}
+];
+STG.sign={
+ init(){L.ord=SIGN_F.map(f=>shuffle(f.opts.map((o,i)=>i)));L.v={h:-1,p:-1,c:-1}},
+ view(){const g=SIGN_F;const val=k=>{const f=g.find(x=>x.k===k);return L.v[k]>=0?f.opts[L.v[k]]:'........'};
+  return `<div class="card"><p><b>ผู้ปฏิบัติการระบบไฟฟ้า</b> ออกแบบข้อความป้ายแจ้งเตือนนิรภัยที่จะแขวนในสถานการณ์ที่ 1 (ซ่อมโคมไฟและเต้ารับห้องปฏิบัติการ วงจรย่อยที่ 2)</p>
+  ${g.map((f,fi)=>`<label>${f.lab}</label><select onchange="L.v['${f.k}']=+this.value;draw()"><option value="-1">— เลือก —</option>${L.ord[fi].map(i=>`<option value="${i}" ${L.v[f.k]===i?'selected':''}>${f.opts[i]}</option>`).join('')}</select><div style="height:8px"></div>`).join('')}
+  <h3>ตัวอย่างป้าย</h3>
+  <div class="sign"><div class="t">${val('h')}</div><p><b>พื้นที่/จุดที่กำลังซ่อม:</b> ${val('p')}</p><p><b>ผู้รับผิดชอบการซ่อม:</b> กลุ่มที่ ${esc(S.group)} (นายช่างผู้ปฏิบัติงาน: ${esc(mName(1))})</p><p><b>แนวทางก่อนเปิดไฟคืน:</b> ${val('c')}</p></div>
+  <button class="btn block" style="margin-top:10px" onclick="STG.sign.check()">ตรวจป้ายและบันทึก</button></div>`},
+ check(){
+  if(Object.values(L.v).some(v=>v<0)){toast('เลือกข้อความให้ครบทุกช่องก่อน');return}
+  const bad=SIGN_F.filter(f=>L.v[f.k]!==f.ok);
+  if(!bad.length){stageDone('ป้ายครบถ้วนชัดเจน: บอกอันตราย จุดที่ซ่อม ผู้รับผิดชอบ และเงื่อนไขการเปิดไฟคืน');return}
+  bad.forEach(f=>minor(f.lab+': '+f.why));
+ },
+ hint(){return 'ป้ายที่ดีต้องตอบ 4 คำถาม: <b>อันตรายอะไร</b> (ห้ามสับสวิตช์) · <b>ซ่อมที่ไหน</b> (ตรงวงจรที่ตัดจริง) · <b>ใครรับผิดชอบ</b> · <b>เปิดไฟคืนได้เมื่อไร</b> (หัวหน้าทีมอนุญาต และผู้แขวนถอดเอง)'}
+};
+
+/* ----- ด่าน 3 สถานการณ์ที่ 1 ตัดไฟ ----- */
+function lever(x,y,w,h,on,col){const hy=on?y+4:y+h-4-h*0.38;return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="#263238"/><rect x="${x+3}" y="${hy}" width="${w-6}" height="${h*0.38}" rx="3" fill="${col}"/><text x="${x+w/2}" y="${y-4}" font-size="9" text-anchor="middle" fill="#37474f">${on?'ON':'OFF'}</text>`}
+STG.s1={
+ brief:`<p>เกิดเหตุ <b>ไฟรั่วที่เครื่องใช้ไฟฟ้า</b> ในห้องปฏิบัติการ ต้องตัดไฟเพื่อเข้าซ่อม <b>โคมไฟและเต้ารับ (วงจรย่อยที่ 2)</b></p><p>สภาพหน้างาน: <b>พื้นหน้าตู้ควบคุมไฟฟ้ามีน้ำหกเปียก</b> และผู้ปฏิบัติงาน <b>ยังไม่ได้สวมรองเท้า</b></p><p class="mute">ให้แตะที่อุปกรณ์ในตู้ไฟ หรือปุ่มคำสั่ง ตามลำดับขั้นตอนที่ถูกต้อง</p>`,
+ init(){L.shoe=false;L.dry=false;L.t=false;L.rcd=true;L.main=true;L.m=[true,true,true];L.sign=false;L.tested=false},
+ safe(){return L.shoe&&L.dry},
+ view(){if(!L.go)return '';
+  const m=L.m;
+  return `<div class="card">
+  <div class="chips"><span class="chip ${L.shoe?'g':''}">${L.shoe?'สวมรองเท้าพื้นยางแล้ว':'เท้าเปล่า'}</span><span class="chip ${L.dry?'g':''}">${L.dry?'ยืนบนแผ่นยางฉนวนแห้ง':'พื้นหน้าตู้เปียกน้ำ'}</span></div>
+  <svg class="scene" viewBox="0 0 330 250">
+   <rect x="6" y="8" width="318" height="178" rx="10" fill="#cfd8dc" stroke="#78909c" stroke-width="3"/>
+   <text x="165" y="24" font-size="11" text-anchor="middle" fill="#37474f" font-weight="700">ตู้ควบคุมไฟฟ้าหลัก (Consumer Unit)</text>
+   <g class="hit" onclick="STG.s1.act('main')"><rect x="16" y="40" width="70" height="120" fill="transparent"/>${lever(20,58,28,60,L.main,'#1565c0')}${lever(54,58,28,60,L.main,'#1565c0')}<text x="51" y="140" font-size="10" text-anchor="middle" font-weight="700">เมนเบรกเกอร์</text></g>
+   <g class="hit" onclick="STG.s1.act('rcd')"><rect x="94" y="40" width="64" height="70" fill="transparent"/>${lever(100,58,26,60,L.rcd,'#2e7d32')}<text x="126" y="140" font-size="10" text-anchor="middle" font-weight="700">เครื่องตัดไฟรั่ว</text><text x="126" y="152" font-size="9" text-anchor="middle">(RCD)</text></g>
+   <g class="hit" onclick="STG.s1.act('T')"><circle cx="143" cy="80" r="11" fill="#ffb300" stroke="#6d4c00" stroke-width="2"/><text x="143" y="84" font-size="11" text-anchor="middle" font-weight="700">T</text></g>
+   ${[0,1,2].map(i=>{const x=172+i*50;return `<g class="hit" onclick="STG.s1.act('mcb',${i})"><rect x="${x-4}" y="40" width="44" height="120" fill="transparent"/>${lever(x+4,58,26,60,m[i],'#455a64')}<text x="${x+17}" y="140" font-size="10" text-anchor="middle" font-weight="700">ย่อย ${i+1}</text><text x="${x+17}" y="152" font-size="8" text-anchor="middle">${['แสงสว่าง','โคม/เต้ารับ','แอร์'][i]}</text></g>`}).join('')}
+   ${L.sign?`<g><path d="M51 58 L51 46" stroke="#555"/><rect x="18" y="160" width="128" height="22" rx="3" fill="#fff8e1" stroke="#c62828" stroke-width="2"/><text x="82" y="175" font-size="9.5" text-anchor="middle" fill="#c62828" font-weight="700">อันตราย! ห้ามสับสวิตช์ กำลังซ่อม</text></g>`:''}
+   <rect x="0" y="196" width="330" height="54" fill="${L.dry?'#d7ccc8':'#b3e5fc'}"/>
+   ${L.dry?`<rect x="110" y="206" width="110" height="14" rx="3" fill="#212121"/><text x="165" y="238" font-size="10" text-anchor="middle">แผ่นยางฉนวนแห้ง</text>`:`<ellipse cx="165" cy="222" rx="120" ry="14" fill="#4fc3f7" opacity=".7"/><text x="165" y="226" font-size="10" text-anchor="middle" fill="#01579b">น้ำนองพื้น</text>`}
+  </svg>
+  <div class="ctrl">
+   <button class="btn sec" onclick="STG.s1.act('shoe')">สวมรองเท้าหุ้มส้นพื้นยาง</button>
+   <button class="btn sec" onclick="STG.s1.act('dry')">เช็ดพื้น/วางแผ่นยางฉนวนแห้งแล้วยืนบนนั้น</button>
+   <button class="btn sec" onclick="STG.s1.act('sign')">แขวนป้ายแจ้งเตือน</button>
+   <button class="btn sec" onclick="STG.s1.act('tester')">ใช้ไขควงเช็คไฟวัดเต้ารับวงจร 2</button>
+  </div>
+  <div id="s1res"></div></div>`},
+ act(a,i){
+  const touch=['main','rcd','T','mcb','sign','tester'];
+  if(touch.includes(a)&&!this.safe()){danger(!L.shoe&&!L.dry?'แตะตู้ไฟฟ้าขณะ <b>เท้าเปล่าและยืนบนพื้นเปียก</b> หากมีไฟรั่ว กระแสจะไหลผ่านร่างกายลงดินทันที':!L.shoe?'แตะตู้ไฟฟ้าขณะ <b>เท้าเปล่า</b> ต้องสวมรองเท้าพื้นยางที่แห้งก่อน':'แตะตู้ไฟฟ้าขณะ <b>ยืนบนพื้นเปียก</b> ต้องทำให้จุดยืนแห้งหรือยืนบนแผ่นฉนวนแห้งก่อน');return}
+  if(a==='shoe'){if(L.shoe){toast('สวมแล้ว');return}L.shoe=true;ok('สวมรองเท้าพื้นยางแห้ง เป็นฉนวนกั้นไม่ให้กระแสไหลลงดิน')}
+  else if(a==='dry'){if(L.dry){toast('ทำแล้ว');return}L.dry=true;ok('จุดยืนแห้งแล้ว')}
+  else if(a==='T'){
+   if(!L.main){minor('ตัดเมนเบรกเกอร์ไปแล้ว ปุ่ม T จึงทดสอบไม่ได้ ต้องกดทดสอบเครื่องตัดไฟรั่ว <b>ก่อน</b> สับเมน');return}
+   if(L.t){toast('ทดสอบแล้ว เครื่องตัดไฟรั่วอยู่ที่ OFF');return}
+   L.t=true;L.rcd=false;ok('กดปุ่ม T แล้วเครื่องตัดไฟรั่วดีดตัดทันที = เครื่องทำงานปกติ')}
+  else if(a==='rcd'){toast(L.rcd?'ตรวจการทำงานของเครื่องตัดไฟรั่วด้วยการกดปุ่ม T (สีเหลือง)':'เครื่องตัดไฟรั่วอยู่ที่ OFF แล้ว')}
+  else if(a==='main'){
+   if(!L.main){toast('เมนเบรกเกอร์อยู่ที่ OFF แล้ว');return}
+   if(!L.t){minor('ยังไม่ได้กดปุ่ม T ทดสอบเครื่องตัดไฟรั่ว ตามลำดับในใบงานต้องทดสอบก่อนสับเมน');return}
+   modal(`<b>จะสับเมนเบรกเกอร์ด้วยท่าทางใด?</b>${shuffle([
+    `<button class="opt" onclick="closeModal();STG.s1.hand(1)">ใช้มือที่แห้ง <b>ข้างเดียว</b> หันข้างเข้าหาตู้ ผลักคันโยกลงสุด</button>`,
+    `<button class="opt" onclick="closeModal();STG.s1.hand(2)">ใช้สองมือจับคันโยกดันลงพร้อมกันให้แรง</button>`,
+    `<button class="opt" onclick="closeModal();STG.s1.hand(3)">มือซ้ายจับขอบตู้เหล็กไว้ มือขวาสับคันโยก</button>`]).join('')}`);return}
+  else if(a==='mcb'){
+   if(!L.m[i]){toast('อยู่ที่ OFF แล้ว');return}
+   if(!L.t){minor('ยังไม่ได้กดปุ่ม T ทดสอบเครื่องตัดไฟรั่ว');return}
+   L.m[i]=false;ok(i===1?'สับเบรกเกอร์ย่อยวงจร 2 (จุดที่ซ่อม) ลงที่ OFF':'สับเบรกเกอร์ย่อยวงจร '+(i+1)+' ลงที่ OFF')}
+  else if(a==='sign'){
+   if(L.sign){toast('แขวนแล้ว');return}
+   if(L.main||L.m[1]){minor('ต้องสับเมนเบรกเกอร์ และเบรกเกอร์ย่อยวงจร 2 ลงที่ OFF ให้ครบก่อน จึงแขวนป้าย');return}
+   L.sign=true;ok('แขวนป้ายที่คันโยก ป้องกันผู้อื่นมาสับไฟขึ้นระหว่างซ่อม')}
+  else if(a==='tester'){
+   if(L.main||L.m[1]){minor('ไขควงเช็คไฟติดสว่าง = <b>ยังมีไฟ!</b> ยังตัดไฟไม่ครบ');return}
+   if(!L.sign){minor('ควรแขวนป้ายแจ้งเตือนก่อน แล้วจึงวัดซ้ำเพื่อยืนยัน');return}
+   L.tested=true;draw();stageDone('ไขควงเช็คไฟไม่ติด = ไม่มีไฟค้างในวงจร 2 ยืนยันแล้วว่าปลอดภัยพร้อมซ่อม (วัดซ้ำเพื่อป้องกันกรณีสับผิดวงจรหรือกลไกเบรกเกอร์ค้าง)');return}
+  draw();
+ },
+ hand(c){
+  if(c===2){danger('ใช้ <b>สองมือ</b> สัมผัสอุปกรณ์ หากมีไฟรั่ว กระแสจะไหลจากมือหนึ่งผ่าน <b>หัวใจ</b> ไปอีกมือ ต้องใช้มือข้างเดียว');return}
+  if(c===3){danger('มือหนึ่ง <b>จับตู้เหล็ก</b> อีกมือสับคันโยก ทำให้ร่างกายครบวงจร กระแสไหลผ่านหัวใจ ต้องใช้มือข้างเดียวและไม่แตะตู้โลหะ');return}
+  L.main=false;ok('ใช้มือข้างเดียวผลักเมนเบรกเกอร์ลงที่ OFF จนสุด');draw();
+ },
+ hint(){
+  if(!L.shoe||!L.dry)return 'เริ่มจาก <b>ความปลอดภัยของตัวเอง</b>: สวมรองเท้าพื้นยางและทำให้จุดยืนแห้ง ห้ามแตะตู้ไฟก่อนเด็ดขาด';
+  if(!L.t)return 'ขั้นต่อไป: กด <b>ปุ่ม T</b> ที่เครื่องตัดไฟรั่วเพื่อตรวจว่ายังทำงานได้';
+  if(L.main)return 'ขั้นต่อไป: สับ <b>เมนเบรกเกอร์</b> ลงที่ OFF ด้วย <b>มือข้างเดียว</b>';
+  if(L.m[1])return 'ขั้นต่อไป: สับ <b>เบรกเกอร์ย่อยวงจร 2</b> (จุดที่ซ่อม) ลงที่ OFF';
+  if(!L.sign)return 'ขั้นต่อไป: <b>แขวนป้าย</b> ห้ามสับสวิตช์';
+  return 'ขั้นสุดท้าย: ใช้ <b>ไขควงเช็คไฟ</b> วัดซ้ำที่จุดซ่อม';
+ }
+};
+
+/* ----- ด่าน 4 สถานการณ์ที่ 2 ประปา ----- */
+STG.s2={
+ brief:`<p><b>ท่อประปาใต้อ่างล้างหน้าแตก</b> น้ำพุ่งแรงและไหลท่วมห้อง</p><p>แผงฝึกจำลองประกอบด้วย มาตรวัดน้ำ → <b>บอลวาล์ว</b> (ก้านโยก) → <b>เกทวาล์ว</b> (พวงมาลัย) เป็นวาล์วประธาน และ <b>สต็อปวาล์ว</b> เฉพาะจุดใต้อ่าง</p><p class="mute">ให้ตัดน้ำตามลำดับที่ถูกต้อง และฝึกปิดวาล์วประธานทั้ง 2 ชนิดบนแผงฝึก สังเกตผลหลังปิดแต่ละตัว</p>`,
+ init(){L.stop=0;L.gate=0;L.ball=0;L.level=0;L.told=false;clearInterval(flowT);flowT=setInterval(()=>{if(!STAGES[S.cur]||STAGES[S.cur].id!=='s2'){clearInterval(flowT);return}if(L.go&&STG.s2.flowing()){L.level=Math.min(100,L.level+1.2);const b=$('wl');if(b){b.style.width=L.level+'%';$('wlt').textContent=Math.round(L.level)+'%'}}},250)},
+ flowing(){return L.ball<90&&L.gate<5},
+ view(){if(!L.go)return '';
+  const fl=this.flowing();
+  const drops=fl?[[-30,-35],[-20,-50],[-38,-15],[25,-40],[30,-20],[-10,-55],[18,-55]].map((d,i)=>`<circle class="drop" cx="290" cy="186" r="3" fill="#29b6f6" style="--dx:${d[0]}px;--dy:${d[1]}px;animation-delay:${i*0.1}s"/>`).join(''):'';
+  return `<div class="card">
+  <svg class="scene" viewBox="0 0 340 250">
+   <rect x="0" y="0" width="340" height="226" fill="#f5f7fa"/>
+   <rect x="0" y="226" width="340" height="24" fill="#cfd8dc"/>
+   ${L.level>0?`<ellipse cx="240" cy="232" rx="${40+L.level}" ry="${4+L.level/14}" fill="#4fc3f7" opacity=".75"/>`:''}
+   <rect x="240" y="78" width="96" height="26" rx="6" fill="#eceff1" stroke="#90a4ae" stroke-width="2"/><path d="M246 80 Q288 112 330 80" fill="#e0e6ea" stroke="#b0bec5"/>
+   <path d="M290 78 L290 62 L270 62" stroke="#90a4ae" stroke-width="6" fill="none"/>
+   <text x="288" y="56" font-size="10" text-anchor="middle">อ่างล้างหน้า</text>
+   <path d="M290 132 Q300 112 290 100" stroke="#78909c" stroke-width="4" fill="none"/>
+   <rect x="0" y="199" width="296" height="12" fill="#eceff1" stroke="#90a4ae"/>
+   <rect x="284" y="140" width="12" height="71" fill="#eceff1" stroke="#90a4ae"/>
+   <path d="M284 182 L290 186 L284 190" stroke="#c62828" stroke-width="2" fill="none"/>
+   <text x="252" y="176" font-size="9" fill="#c62828" font-weight="700">รอยแตก</text>
+   ${drops}
+   <g transform="translate(290 138)"><rect x="-9" y="-6" width="18" height="14" rx="3" fill="#b0bec5" stroke="#546e7a"/><circle cx="-18" cy="1" r="9" fill="#e0e0e0" stroke="#546e7a" stroke-width="2"/><line x1="-18" y1="1" x2="${-18+7*Math.cos(L.stop*2.1)}" y2="${1+7*Math.sin(L.stop*2.1)}" stroke="#546e7a" stroke-width="2"/></g>
+   <text x="252" y="128" font-size="9">สต็อปวาล์ว</text>
+   <circle cx="42" cy="205" r="17" fill="#fff" stroke="#37474f" stroke-width="3"/><circle cx="42" cy="205" r="11" fill="#e3f2fd"/><line x1="42" y1="205" x2="${42+8*Math.cos(Date.now()/300)}" y2="${205+8*Math.sin(Date.now()/300)}" stroke="#c62828" stroke-width="2"/>
+   <text x="42" y="244" font-size="9" text-anchor="middle">มาตรวัดน้ำ</text>
+   <rect x="100" y="195" width="26" height="20" rx="4" fill="#ffca28" stroke="#8d6e00" stroke-width="2"/>
+   <g id="bl" transform="rotate(${-L.ball} 113 192)"><rect x="113" y="188" width="44" height="8" rx="3" fill="#d32f2f"/></g><circle cx="113" cy="192" r="4" fill="#333"/>
+   <text x="113" y="244" font-size="9" text-anchor="middle">บอลวาล์ว</text>
+   <rect x="168" y="193" width="26" height="24" rx="4" fill="#a1887f" stroke="#4e342e" stroke-width="2"/><rect x="178" y="166" width="6" height="28" fill="#795548"/>
+   <g transform="rotate(${L.gate*72} 181 160)"><circle cx="181" cy="160" r="15" fill="none" stroke="#c62828" stroke-width="4"/><line x1="166" y1="160" x2="196" y2="160" stroke="#c62828" stroke-width="3"/><line x1="181" y1="145" x2="181" y2="175" stroke="#c62828" stroke-width="3"/></g>
+   <text x="181" y="244" font-size="9" text-anchor="middle">เกทวาล์ว</text>
+   <path d="M64 180 L84 180" stroke="#1565c0" stroke-width="2" marker-end="url(#ar)"/><defs><marker id="ar" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6Z" fill="#1565c0"/></marker></defs><text x="74" y="174" font-size="8" text-anchor="middle" fill="#1565c0">ทิศน้ำ</text>
+  </svg>
+  <div class="tline"><span>ระดับน้ำท่วมพื้น <b id="wlt">${Math.round(L.level)}%</b> · ${fl?'<b style="color:#c62828">น้ำยังพุ่งอยู่</b>':'<b style="color:#1e8a4c">น้ำหยุดไหลแล้ว</b>'}</span></div>
+  <div class="bar"><div id="wl" style="width:${L.level}%;background:#29b6f6"></div></div>
+  <div class="ctrl">
+   <div class="box"><b>สต็อปวาล์ว (ใต้อ่าง)</b><div class="bar"><div style="width:${L.stop/3*100}%"></div></div><div class="mute">ปิดแล้ว ${Math.round(L.stop/3*100)}%</div>
+    <button class="btn sec" onclick="STG.s2.act('stop',1)">↻ หมุนตามเข็ม</button><button class="btn sec" onclick="STG.s2.act('stop',-1)">↺ หมุนทวนเข็ม</button></div>
+   <div class="box"><b>บอลวาล์ว (ก้านโยก) มุม <span id="bla">${L.ball}</span>°</b><input type="range" min="0" max="90" step="5" value="${L.ball}" oninput="STG.s2.ballMove(+this.value)" onchange="STG.s2.ballSet(+this.value)"><div class="mute">ลากเพื่อบิดก้านโยก</div></div>
+   <div class="box"><b>เกทวาล์ว (พวงมาลัย)</b><div class="bar"><div style="width:${L.gate/5*100}%"></div></div><div class="mute">ปิดแล้ว ${Math.round(L.gate/5*100)}%</div>
+    <button class="btn sec" onclick="STG.s2.act('gate',1)">↻ หมุนตามเข็ม</button><button class="btn sec" onclick="STG.s2.act('gate',-1)">↺ หมุนทวนเข็ม</button></div>
+  </div>
+  <button class="btn sec" onclick="STG.s2.act('plug')">ใช้มือ/ผ้าอุดรอยแตกไว้ก่อน</button>
+  </div>`},
+ needStop(){if(L.stop<3){minor('ควรปิด <b>สต็อปวาล์วเฉพาะจุด</b> ใต้อ่างให้สุดก่อน เพื่อให้จุดอื่นในบ้านยังใช้น้ำได้ ถ้าปิดแล้วยังไม่หยุดจึงไปปิดวาล์วประธาน');return true}return false},
+ act(a,d){
+  if(a==='plug'){minor('น้ำมีแรงดันสูง อุดด้วยมือไม่อยู่และเสียเวลา ต้องตัดน้ำที่วาล์ว');return}
+  if(a==='stop'){
+   if(d<0){minor('หมุน <b>ทวนเข็ม</b> คือ <b>เปิด</b> วาล์ว (จำง่าย ๆ: ขวาปิด–ซ้ายเปิด)');if(L.stop>0)L.stop--;draw();return}
+   if(L.stop>=3){toast('สต็อปวาล์วปิดสุดเกลียวแล้ว ห้ามฝืนหมุนต่อ');return}
+   L.stop++;
+   if(L.stop===3&&!L.told){L.told=true;draw();modal(`<div class="ok-h">ปิดสต็อปวาล์วสุดแล้ว</div><p>แต่ <b>น้ำยังพุ่งออกจากรอยแตก!</b> สังเกตตำแหน่ง: รอยแตกอยู่ที่ท่อ <b>ก่อนถึง</b> สต็อปวาล์ว (ฝั่งที่น้ำไหลเข้ามา) การปิดวาล์วเฉพาะจุดจึงตัดน้ำไม่ได้</p><p>ทีมต้องตัดสินใจไปปิด <b>วาล์วประธานหลังมาตรวัดน้ำ</b></p><button class="btn block" onclick="closeModal()">ไปปิดวาล์วประธาน</button>`);return}
+   draw();return}
+  if(a==='gate'){
+   if(this.needStop())return;
+   if(d<0){minor('หมุนพวงมาลัย <b>ทวนเข็ม</b> คือ <b>เปิด</b> น้ำ ถ้าหมุนผิดทิศจนสุดอาจทำให้เกลียววาล์วเสียหาย');if(L.gate>0)L.gate--;draw();return}
+   if(L.gate>=5){toast('เกทวาล์วปิดสุดเกลียวแล้ว');return}
+   L.gate++;draw();this.check();return}
+ },
+ ballMove(v){if(L.stop<3)return;const g=$('bl');if(g)g.setAttribute('transform',`rotate(${-v} 113 192)`);$('bla').textContent=v},
+ ballSet(v){
+  if(this.needStop()){L.ball=0;draw();return}
+  L.ball=v;
+  if(v===90)ok('ก้านโยกวางตัว <b>ตั้งฉาก</b> ขวางแนวท่อ = ปิดสนิท');
+  else if(v>0)toast('ก้านโยกยังไม่ตั้งฉากกับท่อ น้ำยังไหลผ่านได้');
+  draw();this.check();
+ },
+ check(){if(L.ball===90&&L.gate>=5&&L.stop>=3){clearInterval(flowT);stageDone('ปิดสต็อปวาล์วตามเข็มนาฬิกา → บิดบอลวาล์ว 90° ตั้งฉากกับท่อ → หมุนเกทวาล์วตามเข็มนาฬิกาจนสุดเกลียว น้ำหยุดไหลแล้ว (ขั้นต่อไปคือแจ้งช่างประปาเปลี่ยนท่อ)')}},
+ hint(){
+  if(L.stop<3)return 'เริ่มที่วาล์ว <b>ใกล้จุดรั่วที่สุด</b> ก่อน (สต็อปวาล์วใต้อ่าง) หมุนไปทาง <b>ตามเข็มนาฬิกา</b> จนสุด — จำ “ขวาปิด–ซ้ายเปิด”';
+  if(L.ball<90)return 'บอลวาล์ว: บิดก้านโยกจน <b>ตั้งฉาก 90°</b> กับแนวท่อ (ก้านขนานท่อ = เปิด, ขวางท่อ = ปิด)';
+  return 'เกทวาล์ว: หมุนพวงมาลัย <b>ตามเข็มนาฬิกา</b> หลายรอบจนสุดเกลียว';
+ }
+};
+
+/* ----- ด่าน 5 สถานการณ์ที่ 3 ช่วยผู้ถูกไฟดูด ----- */
+const S3_STEPS=[
+ {q:'หัวหน้าทีมความปลอดภัย: เห็นผู้ประสบภัยล้มลงในแอ่งน้ำ มือกำสายไฟของเครื่องฉีดน้ำที่ชำรุด จะสั่งการอย่างไรเป็นอันดับแรก?',type:'opt',opts:[
+  {t:'“ห้ามทุกคนใช้มือเปล่าจับตัวผู้ประสบภัย! ถอยออกจากบริเวณที่เปียกน้ำ”',r:'ok',m:'ตั้งสติ ห้ามจับสด และกันคนออกจากจุดเปียก ป้องกันผู้ช่วยเหลือเป็นผู้ประสบภัยรายที่สอง'},
+  {t:'“รีบช่วยกันดึงแขนเขาออกมาเร็ว!”',r:'danger',m:'การจับตัวผู้ที่กำลังถูกไฟดูดด้วยมือเปล่า ทำให้กระแสไหลผ่านผู้ช่วยเหลือ เสียชีวิตตามกันได้ (เหมือนกรณีศึกษาข่าวจริง)'},
+  {t:'“เอาน้ำราดตัวเขาให้หายช็อก”',r:'danger',m:'น้ำเป็นตัวนำไฟฟ้า ทำให้กระแสแผ่กระจายกว้างขึ้นและอันตรายต่อทุกคน'}]},
+ {q:'ตู้ไฟอยู่ในห้องที่ล็อกไว้ <b>ตัดไฟทันทีไม่ได้</b> ผู้ช่วยเหลือควรเตรียมตัวและยืนที่ใด?',type:'opt',opts:[
+  {t:'สวมรองเท้าพื้นยาง ยืนบนพื้นที่แห้งสนิท ห่างจากแอ่งน้ำ',r:'ok',m:'ร่างกายแยกจากพื้นและน้ำด้วยฉนวน กระแสไม่มีทางไหลผ่านลงดิน'},
+  {t:'ถอดรองเท้าเพื่อความคล่องตัว แล้วยืนชิดขอบแอ่งน้ำให้ใกล้ที่สุด',r:'danger',m:'เท้าเปล่าใกล้แอ่งน้ำที่มีไฟรั่ว กระแสไหลผ่านร่างกายลงดินได้ทันที'},
+  {t:'ยืนบนพื้นแห้ง แต่ไม่ต้องสวมรองเท้าเพราะพื้นแห้งแล้ว',r:'minor',m:'พื้นแห้งช่วยได้ แต่ใบความรู้กำหนดให้สวมรองเท้าพื้นยางด้วย เพื่อเป็นฉนวนอีกชั้น'}]},
+ {q:'ผู้ปฏิบัติการอุปกรณ์กู้ภัย: เลือกอุปกรณ์สำหรับ <b>เขี่ยสายไฟ</b> ออกจากมือและตัวผู้ประสบภัย',type:'tool',opts:[
+  {k:'pvc',t:'ท่อพีวีซีแห้ง',r:'ok',m:'ท่อพีวีซีแห้งเป็นฉนวน ยาวพอให้ยืนห่าง เขี่ยสายไฟหลุดออกได้'},
+  {k:'broom',t:'ไม้กวาดด้ามไม้แห้ง',r:'ok',m:'ไม้แห้งเป็นฉนวน ใช้เขี่ยสายไฟออกได้'},
+  {k:'steel',t:'ท่อเหล็ก',r:'danger',m:'ท่อเหล็กเป็นตัวนำไฟฟ้า กระแสจะไหลมาที่ผู้ช่วยเหลือทันที'},
+  {k:'wetwood',t:'ท่อนไม้เปียกน้ำ',r:'danger',m:'ไม้ที่เปียกน้ำนำไฟฟ้าได้ ต้องใช้วัสดุที่แห้งสนิทเท่านั้น'},
+  {k:'umbrella',t:'ร่มด้ามเหล็ก',r:'danger',m:'ด้ามและโครงร่มเป็นโลหะ นำไฟฟ้า'},
+  {k:'hand',t:'มือเปล่า (ใส่ถุงมือผ้า)',r:'danger',m:'ถุงมือผ้าไม่ใช่ฉนวนไฟฟ้า ห้ามใช้มือเข้าใกล้สายไฟที่มีไฟ'}]},
+ {q:'สายไฟหลุดจากตัวแล้ว แต่ผู้ประสบภัย <b>ยังนอนอยู่ในแอ่งน้ำที่อาจมีไฟรั่ว</b> เลือกอุปกรณ์สำหรับ <b>ดึงตัว</b> ออกมาในที่ปลอดภัย',type:'tool',opts:[
+  {k:'cloth',t:'ผ้าขาวม้าแห้ง',r:'ok',m:'คล้องผ้าขาวม้าแห้งอ้อมตัวหรือแขนขา แล้วดึงลากออกโดยไม่สัมผัสตัวโดยตรง'},
+  {k:'rope',t:'เชือกแห้ง',r:'ok',m:'เชือกแห้งเป็นฉนวน ใช้คล้องดึงตัวออกได้'},
+  {k:'wetcloth',t:'ผ้าชุบน้ำ',r:'danger',m:'ผ้าเปียกนำไฟฟ้า ห้ามใช้'},
+  {k:'chain',t:'โซ่เหล็ก',r:'danger',m:'โซ่เหล็กเป็นตัวนำไฟฟ้า'},
+  {k:'hand',t:'จับแขนด้วยมือเปล่า เพราะสายหลุดแล้ว',r:'danger',m:'แอ่งน้ำรอบตัวยังอาจมีไฟรั่วอยู่ ต้องไม่สัมผัสตัวผู้ประสบภัยโดยตรงจนกว่าจะพ้นรัศมีไฟรั่ว'}]},
+ {q:'นำผู้ประสบภัยมาอยู่ในจุดแห้งปลอดภัยแล้ว ขั้นต่อไปคือ?',type:'opt',opts:[
+  {t:'ตรวจการหายใจและชีพจร แล้วโทรแจ้งสายด่วนการแพทย์ฉุกเฉินทันที',r:'ok',m:'ประเมินอาการเบื้องต้นและขอความช่วยเหลือทางการแพทย์โดยเร็ว'},
+  {t:'ให้ผู้ประสบภัยดื่มน้ำ แล้วรอดูอาการสักพัก',r:'minor',m:'ผู้ถูกไฟดูดอาจหัวใจเต้นผิดจังหวะภายหลังได้ ต้องประเมินการหายใจและโทรแจ้งแพทย์ทันที ไม่รอดูอาการ'},
+  {t:'กลับไปเสียบเครื่องฉีดน้ำเพื่อหาว่าสายชำรุดตรงไหน',r:'danger',m:'ห้ามนำเครื่องที่ชำรุดกลับมาเสียบใช้ จนกว่าช่างผู้เชี่ยวชาญจะตรวจซ่อม'}]},
+ {q:'จำลองการโทรแจ้งเหตุ: กดหมายเลข <b>สายด่วนการแพทย์ฉุกเฉิน</b>',type:'dial'}
+];
+STG.s3={
+ brief:`<p>เพื่อนบ้านใช้ <b>เครื่องฉีดน้ำแรงดันสูง</b> ล้างพื้นด้วยเท้าเปล่า สายไฟถลอกแตะแอ่งน้ำ จนถูกไฟฟ้าดูดล้มลงและ <b>มือกำสายไฟแน่น</b></p><p><b>ตู้ไฟอยู่ในห้องที่ล็อก ตัดเบรกเกอร์ทันทีไม่ได้</b> และเต้าเสียบอยู่หลังแอ่งน้ำ</p><p class="mute">หัวหน้าทีมสั่งการ ผู้ปฏิบัติการอุปกรณ์กู้ภัยเลือกอุปกรณ์ฉนวน ตอบทีละขั้นตามลำดับ</p>`,
+ init(){L.step=0;L.dial='';L.ord=S3_STEPS.map(s=>s.opts?shuffle(s.opts):null)},
+ scene(){const st=L.step;const cable=st<3,inWater=st<4,resc=st>=2;
+  return `<svg class="scene" viewBox="0 0 340 170">
+  <rect x="0" y="0" width="340" height="170" fill="#f5f7fa"/><rect x="0" y="120" width="340" height="50" fill="#d7ccc8"/>
+  <ellipse cx="215" cy="140" rx="95" ry="20" fill="#4fc3f7" opacity=".75"/>
+  <rect x="300" y="60" width="20" height="26" rx="3" fill="#fff" stroke="#555"/><circle cx="306" cy="70" r="2"/><circle cx="314" cy="70" r="2"/><text x="310" y="54" font-size="8" text-anchor="middle">เต้ารับ</text>
+  <rect x="268" y="104" width="34" height="24" rx="4" fill="#fbc02d" stroke="#795548"/><text x="285" y="120" font-size="7" text-anchor="middle">เครื่องฉีดน้ำ</text>
+  <path d="M302 112 Q312 96 310 76" stroke="#222" stroke-width="2.5" fill="none"/>
+  ${cable?`<path d="M268 118 Q240 150 ${inWater?205:120} 136" stroke="#222" stroke-width="3" fill="none"/><circle cx="238" cy="140" r="3" fill="#ff6f00"/>`:`<path d="M268 118 Q262 150 250 156" stroke="#222" stroke-width="3" fill="none"/>`}
+  <g transform="translate(${inWater?170:60} 128)">
+   <ellipse cx="0" cy="0" rx="34" ry="8" fill="#5c6bc0"/><circle cx="-40" cy="-2" r="9" fill="#f2c9a0"/><path d="M30 0 L48 6" stroke="#5c6bc0" stroke-width="7"/><path d="M10 -4 L32 6" stroke="#f2c9a0" stroke-width="5"/>
+   ${cable&&inWater?`<g class="zap" stroke="#ffeb3b" stroke-width="2.5" fill="none"><path d="M-30 -22 l6 8 l-6 4 l6 8"/><path d="M5 -24 l6 8 l-6 4 l6 8"/><path d="M38 -16 l6 8 l-6 4 l6 8"/></g>`:''}
+  </g>
+  ${resc?`<g transform="translate(${st>=4?110:40} 70)"><circle cx="0" cy="0" r="9" fill="#f2c9a0"/><rect x="-8" y="10" width="16" height="30" rx="4" fill="#2e7d32"/><rect x="-8" y="40" width="7" height="20" fill="#37474f"/><rect x="1" y="40" width="7" height="20" fill="#37474f"/><rect x="-10" y="58" width="10" height="5" fill="#111"/><rect x="0" y="58" width="10" height="5" fill="#111"/>${st===3?`<line x1="8" y1="18" x2="150" y2="60" stroke="#eceff1" stroke-width="6"/><line x1="8" y1="18" x2="150" y2="60" stroke="#90a4ae" stroke-width="1"/>`:''}</g>`:''}
+  <text x="60" y="160" font-size="9" text-anchor="middle">${resc?'พื้นแห้ง':''}</text>
+ </svg>`},
+ view(){if(!L.go)return '';const st=S3_STEPS[L.step];
+  let body='';
+  if(st.type==='opt')body=L.ord[L.step].map((o,i)=>`<button class="opt" onclick="STG.s3.pick(${i})">${o.t}</button>`).join('');
+  else if(st.type==='tool')body=`<div class="grid">${L.ord[L.step].map((o,i)=>`<button class="item" onclick="STG.s3.pick(${i})">${IC[o.k]}${o.t}</button>`).join('')}</div>`;
+  else body=`<div class="disp">${L.dial||'&nbsp;'}</div><div class="pad">${['1','2','3','4','5','6','7','8','9','⌫','0','📞'].map(k=>`<button onclick="STG.s3.key('${k}')">${k}</button>`).join('')}</div>`;
+  return `<div class="card">${this.scene()}<div class="mute" style="margin-top:6px">ขั้นที่ ${L.step+1}/${S3_STEPS.length}</div><p><b>${st.q}</b></p>${body}</div>`},
+ pick(i){const o=L.ord[L.step][i];
+  if(o.r==='danger'){danger(o.m);return}
+  if(o.r==='minor'){minor(o.m);return}
+  ok(o.m);L.step++;draw()},
+ key(k){
+  if(k==='⌫'){L.dial=L.dial.slice(0,-1);draw();return}
+  if(k!=='📞'){if(L.dial.length<5)L.dial+=k;draw();return}
+  const n=L.dial;
+  if(n==='1669'){stageDone('โทร 1669 แจ้งเหตุพร้อมบอกอาการและสถานที่ ห้ามนำเครื่องฉีดน้ำที่ชำรุดมาใช้จนกว่าช่างผู้เชี่ยวชาญจะตรวจซ่อม (ถ้าเป็นสายไฟสาธารณะขาด ให้แจ้งการไฟฟ้าส่วนภูมิภาค 1129 ด้วย)');return}
+  const why={'191':'191 คือเหตุด่วนเหตุร้าย (ตำรวจ)','199':'199 คือแจ้งเหตุเพลิงไหม้','1129':'1129 คือการไฟฟ้าส่วนภูมิภาค ใช้เมื่อสายไฟสาธารณะขาด ผู้บาดเจ็บต้องโทร 1669 ก่อน','1669':''};
+  minor((why[n]||('หมายเลข '+(n||'(ว่าง)')+' ไม่ถูกต้อง'))+' — สายด่วนการแพทย์ฉุกเฉินคือ 1669');L.dial='';draw()},
+ hint(){const h=['คาถา: <b>ห้ามจับสด</b> – ปลดคัตเอาต์ – เอาฉนวนเขี่ย – เคลียร์พื้นที่โทร 1669','ผู้ช่วยต้องเป็น <b>ฉนวน</b> จากพื้น: รองเท้าพื้นยาง + พื้นแห้ง','เลือกวัสดุที่ <b>เป็นฉนวน</b> และ <b>แห้งสนิท</b> (พลาสติก ไม้แห้ง)','ดึงตัวโดย <b>ไม่สัมผัสตัวโดยตรง</b>: ผ้าหรือเชือกที่แห้ง','หลังพ้นอันตราย: ตรวจการหายใจ/ชีพจร แล้ว <b>โทรแจ้งทันที</b>','สายด่วนการแพทย์ฉุกเฉิน: 4 หลัก ขึ้นต้นด้วย 16'];return h[L.step]}
+};
+
+/* ----- ด่าน 6 คืนสภาพ + ขีดจำกัด ----- */
+const RESET=[
+ {id:1,t:'ตรวจความแน่นหนาของจุดต่อ ไม่มีน้ำรั่วซึม ไม่มีเศษสายไฟเปลือยหลงเหลือ'},
+ {id:2,t:'เช็ดคราบน้ำบนพื้นให้แห้งสนิท'},
+ {id:3,t:'หัวหน้าทีมอนุญาต แล้วผู้แขวนถอดป้ายแจ้งเตือนออกด้วยตนเอง'},
+ {id:4,t:'ปรับคืนตำแหน่งวาล์วและเบรกเกอร์บนแผงฝึกให้อยู่ในสถานะปกติ'},
+ {id:5,t:'ทำความสะอาดอุปกรณ์ป้องกันส่วนบุคคล ตรวจนับ และจัดเก็บเข้าตะกร้า'}
+];
+const LIMITQ=[
+ {t:'เมนเบรกเกอร์ไหม้/ละลาย',ok:true,why:'อุปกรณ์หลักเสียหาย ต้องเปลี่ยนโดยช่างไฟฟ้า'},
+ {t:'สายเมนไฟฟ้าขาด',ok:true,why:'สายเมนมีไฟแรงสูงจากการไฟฟ้า ห้ามแตะ ต้องแจ้งช่าง/การไฟฟ้า'},
+ {t:'ซ่อมเครื่องฉีดน้ำที่สายไฟถลอก ก่อนนำกลับมาใช้',ok:true,why:'เป็นงานซ่อมอุปกรณ์ชำรุด ต้องให้ช่างตรวจซ่อมก่อนใช้'},
+ {t:'เปลี่ยนท่อประปาที่แตกใต้อ่าง',ok:true,why:'เป็นงานซ่อม/เปลี่ยนท่อ เราทำได้แค่ตัดน้ำแล้วแจ้งช่างประปา'},
+ {t:'กดปุ่ม T ทดสอบเครื่องตัดไฟรั่วประจำเดือน',ok:false,why:'เป็นการทดสอบตามคู่มือ ทำเองได้เดือนละ 1 ครั้ง'},
+ {t:'ปิดสต็อปวาล์วใต้อ่างเมื่อมีน้ำรั่ว',ok:false,why:'เป็นการตัดระบบฉุกเฉิน ทำเองได้ทันที'},
+ {t:'สับเมนเบรกเกอร์ลงเมื่อเกิดเหตุฉุกเฉิน',ok:false,why:'เป็นการตัดระบบฉุกเฉิน ทำเองได้ (ยืนที่แห้ง ใช้มือข้างเดียว)'}
+];
+STG.reset={
+ init(){L.ord=shuffle(RESET);L.pos={};L.lock={};L.ochk=false;L.part=1;L.qord=shuffle(LIMITQ);L.sel={};L.chk=null},
+ view(){
+  if(L.part===1){const n=Object.keys(L.pos).length;
+   return `<div class="card"><p><b>ผู้ตรวจสอบขั้นตอนและดูแลความสะอาด</b>: หลังฝึกเสร็จ แตะเรียงลำดับงานคืนสภาพจาก <b>ทำก่อน → ทำหลัง</b> (แตะข้อที่เลือกแล้วซ้ำเพื่อยกเลิก) ครบ 5 ข้อแล้วกดตรวจลำดับ</p>
+   ${L.ochk?'<div class="note" style="margin-bottom:6px">ข้อสีเขียวอยู่ถูกลำดับแล้ว (ล็อกไว้) · ข้อสีแดงให้ทีมช่วยกันเรียงใหม่เอง แล้วกดตรวจอีกครั้ง</div>':''}
+   <div class="olist">${L.ord.map(r=>{const p=L.pos[r.id],lk=L.lock[r.id],bad=L.ochk&&!lk&&p==null;
+    const sty=lk?'border-color:#1e8a4c;background:#e6f4ec':bad?'border-color:#c62828;background:#fdecea':p?'border-color:#1f5fa8;background:#eaf2fc':'';
+    return `<button style="${sty}" onclick="STG.reset.tap(${r.id})"><b>${p?p+'.':'◻'}</b> ${r.t}${lk?' <b style="color:#1e8a4c">✓</b>':''}${bad?' <b style="color:#c62828">✗ เรียงใหม่</b>':''}</button>`}).join('')}</div>
+   <button class="btn block" ${n<5?'disabled':''} onclick="STG.reset.checkO()">${L.ochk?'ตรวจลำดับที่แก้ไขแล้ว':'ตรวจลำดับ'} (${n}/5)</button></div>`}
+  const it=(q,i)=>{const st=L.chk?L.chk[i]:null;const lock=st==='ok';
+   const sty=st==='ok'?'border-color:#1e8a4c;background:#e6f4ec':st==='bad'?'border-color:#c62828;background:#fdecea':L.sel[i]?'border-color:#1f5fa8;background:#eaf2fc':'';
+   return `<button style="${sty}" onclick="STG.reset.tog(${i})">${L.sel[i]?'☑':'☐'} ${q.t}${st==='ok'?' <b style="color:#1e8a4c">✓ ถูกแล้ว</b><br><span class="mute">'+q.why+'</span>':''}${st==='bad'?' <b style="color:#c62828">✗ ตรวจข้อนี้ใหม่</b><br><span class="mute">'+(L.sel[i]?'ข้อนี้นักเรียนทำเองได้หรือไม่? ลองคิดว่าเป็นงาน “ตัดระบบ/ทดสอบ” หรืองาน “ซ่อม”':'ข้อนี้เป็นงานซ่อมหรือไม่? ลองพิจารณาใหม่')+'</span>':''}</button>`};
+  return `<div class="card"><p><b>ประเมินขีดจำกัดของตนเอง</b>: เลือก <b>ทุกข้อ</b> ที่เป็นงานซึ่งนักเรียนต้อง <b>หยุดและแจ้งช่างผู้เชี่ยวชาญ</b> ดำเนินการต่อ</p>
+  ${L.chk?'<div class="note" style="margin-bottom:6px">ข้อสีเขียวถูกแล้ว (ล็อกไว้) · ข้อสีแดงให้ทีมช่วยกันพิจารณาแล้วแก้ไขเอง จากนั้นกดยืนยันอีกครั้ง</div>':''}
+  <div class="olist">${L.qord.map(it).join('')}</div>
+  <button class="btn block" onclick="STG.reset.checkQ()">${L.chk?'ยืนยันคำตอบที่แก้ไขแล้ว':'ยืนยันคำตอบ'}</button></div>`},
+ tog(i){if(L.chk&&L.chk[i]==='ok'){toast('ข้อนี้ถูกแล้ว ไม่ต้องแก้');return}L.sel[i]=!L.sel[i];if(L.chk)L.chk[i]='edit';draw()},
+ tap(id){
+  if(L.lock[id]){toast('ข้อนี้อยู่ถูกลำดับแล้ว');return}
+  if(L.pos[id]!=null){delete L.pos[id];draw();return}
+  const used=Object.values(L.pos);let k=1;while(used.includes(k))k++;
+  L.pos[id]=k;draw();
+ },
+ checkO(){
+  const P=L.pos;
+  if(P[4]<P[2]||P[4]<P[3]){danger('เรียงให้ <b>เปิดน้ำ/สับไฟคืน</b> ก่อน'+(P[4]<P[2]?'เช็ดพื้นให้แห้ง':'')+(P[4]<P[2]&&P[4]<P[3]?' และก่อน':'')+(P[4]<P[3]?'ถอดป้ายแจ้งเตือน':'')+' อาจมีคนกำลังซ่อมอยู่ และเสี่ยงไฟรั่วผ่านพื้นเปียก');return}
+  L.ochk=true;let nb=0;
+  RESET.forEach(r=>{if(P[r.id]===r.id)L.lock[r.id]=true;else{nb++;delete P[r.id]}});
+  if(!nb){ok('เรียงลำดับคืนสภาพถูกต้องครบ');L.part=2;draw();return}
+  minor('เรียงลำดับยังไม่ถูก '+nb+' ข้อ (ข้อสีแดง) — ให้ทีมพิจารณาแล้วเรียงใหม่เอง');draw();
+ },
+ checkQ(){
+  if(L.chk&&L.chk.some(c=>c==='bad')){toast('ยังมีข้อสีแดงที่ยังไม่ได้แก้ แตะเพื่อแก้ไขก่อนยืนยัน');return}
+  L.chk=L.qord.map((q,i)=>!!L.sel[i]===q.ok?'ok':'bad');
+  const nb=L.chk.filter(c=>c==='bad').length;
+  if(!nb){stageDone('คืนสภาพพื้นที่ครบตามลำดับ และแยกได้ว่างานใดทำเองได้ งานใดต้องส่งต่อช่างผู้เชี่ยวชาญ');return}
+  minor('แยกขอบเขตงานยังไม่ถูก '+nb+' ข้อ (ข้อสีแดง) — ให้ทีมพิจารณาแล้วแก้ไขเอง');draw();
+ },
+ hint(){if(L.part===1)return 'ช่องลำดับที่ยังว่างคือลำดับที่ต้องเรียงใหม่ · หลักคือ “<b>ตรวจ → เช็ดพื้นให้แห้ง → ถอดป้าย → จึงเปิดระบบคืน → เก็บของ</b>” ห้ามจ่ายไฟ/น้ำคืนก่อนพื้นแห้งและก่อนถอดป้าย';
+  return 'นักเรียนทำได้: ตัดระบบฉุกเฉินและทดสอบตามคู่มือ · ต้องส่งช่าง: อุปกรณ์ไหม้/ขาด/ชำรุดที่ต้อง <b>ซ่อมหรือเปลี่ยน</b>'}
+};
+
+/* =========================================================
+   คิดคะแนน
+   ========================================================= */
+function lvl(r,extra=0){ // ระดับรูบริก 1–4
+ if(r.restarts>=2)return 1; if(r.restarts===1)return 2;
+ const m=r.minor+extra;
+ if(m===0&&r.hints===0&&r.lastTime<=LIMIT)return 4;
+ if(m<=1&&r.hints<=1)return 3;
+ return 2;
+}
+function lvlUntimed(r){if(r.restarts>=2)return 1;if(r.restarts===1)return 2;const m=r.minor+r.hints;return m===0?4:m<=1?3:2}
+function research(r){ // คะแนนวิจัยเต็ม 10 (ไม่ใช่คะแนนจริง)
+ const acc=Math.max(0,6-r.minor-2*r.danger);
+ const hn=r.hints===0?2:r.hints===1?1:0;
+ const tm=r.lastTime<=LIMIT?2:r.lastTime<=45?1:0;
+ return {acc,hn,tm,tot:acc+hn+tm};
+}
+function conv(score,full){const p=score/full*100;return p>=80?1:full===12?(score>=6?0.5:0):(score>=4?0.5:0)}
+function lvlName(l){return ['','ปรับปรุง','พอใช้','ดี','ดีมาก'][l]}
+function calc(){
+ const R=S.rec;
+ const sItems=[
+  {n:'1. ตัดระบบไฟฟ้าและป้ายแจ้งเตือน',l:lvl(R.s1,R.sign.minor)},
+  {n:'2. ตัดระบบประปา (บอล/เกทวาล์ว)',l:lvl(R.s2)},
+  {n:'3. ช่วยผู้ประสบภัยจากไฟฟ้าดูด',l:lvl(R.s3)}];
+ const sTot=sItems.reduce((a,b)=>a+b.l,0);
+ const allDanger=Object.values(R).reduce((a,r)=>a+r.danger,0);
+ const a1=allDanger>=2?1:allDanger===1?2:(R.ppe.minor===0&&R.ppe.hints===0?4:3);
+ const a2=lvlUntimed(R.reset);
+ const aTot=a1+a2;
+ const dec=R.s2.minor+R.s3.minor;const dg=R.s2.danger+R.s3.danger+R.s1.danger;
+ const C=dg>=2?0:dg===1?1:(dec<=1?3:2);
+ const rs=['s1','s2','s3'].map(k=>research(R[k]));
+ const rAvg=rs.reduce((a,b)=>a+b.tot,0)/3;
+ return {sItems,sTot,sConv:conv(sTot,12),aItems:[{n:'1. ความรอบคอบ/อุปกรณ์ป้องกัน',l:a1},{n:'2. ความรับผิดชอบ/คืนสภาพพื้นที่',l:a2}],aTot,aConv:conv(aTot,8),C,rs,rAvg,allDanger};
+}
+function code(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(36).toUpperCase().slice(0,6)}
+
+function finishAll(){S.finished=S.finished||new Date().toISOString();save();viewSummary()}
+function viewSummary(){
+ $('toast').style.display='none';closeModal();clearInterval(tick);
+ const R=S.rec,c=calc();
+ const tot=STAGES.reduce((a,s)=>a+R[s.id].totalTime,0);
+ const stars=Math.round(c.sTot/12*5);
+ const d=new Date(S.finished);
+ const dataStr=[S.group,S.cls,...S.members.map(m=>m.name),...STAGES.map(s=>{const r=R[s.id];return [r.minor,r.danger,r.hints,r.restarts,r.lastTime.toFixed(1)].join(',')}),S.finished].join('|');
+ const errs=[];STAGES.forEach((s,i)=>{const seen={};R[s.id].errs.forEach(e=>{const k=e.m.replace(/<[^>]+>/g,'');seen[k]=(seen[k]||0)+1});Object.entries(seen).forEach(([m,n])=>errs.push(`<li><b>ด่าน ${i+1}</b>${n>1?' ('+n+' ครั้ง)':''}: ${esc(m.length>110?m.slice(0,108)+'…':m)}</li>`))});
+ const errsDanger=STAGES.map(s=>R[s.id].errs.filter(e=>e.k==='danger').length);
+ $('app').innerHTML=`
+ <div class="sumhead"><div class="mute">ใบงานที่ 2.2 · ง 30275 · แผนที่ 2 · ${d.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'})} ${d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})} น.</div>
+ <div class="big">กลุ่มที่ ${esc(S.group)} · ชั้น ${esc(S.cls)}</div>
+ <div>${'★'.repeat(stars)}${'☆'.repeat(5-stars)} &nbsp; รหัสตรวจสอบ <b>${code(dataStr)}</b></div></div>
+ <div class="card" style="padding:10px">
+ <table><tr><th>คนที่</th><th>ชื่อ-นามสกุล</th><th>เลขที่</th><th>บทบาท</th></tr>
+ ${S.members.map((m,i)=>`<tr><td>${i+1}</td><td class="l">${esc(m.name)}</td><td>${esc(m.no)}</td><td class="l">${['หัวหน้าทีม','ผู้ปฏิบัติการไฟฟ้า','ผู้ปฏิบัติการประปา/กู้ภัย','ผู้ตรวจสอบ/ความสะอาด'][i]}</td></tr>`).join('')}</table>
+ <div class="kpi">
+  <div>ทักษะ S<b class="${c.sConv>=1?'pass':'fail'}">${c.sTot}/12</b>= ${c.sConv} คะแนน</div>
+  <div>เจตคติ A*<b class="${c.aConv>=1?'pass':'fail'}">${c.aTot}/8</b>= ${c.aConv} คะแนน</div>
+  <div>สมรรถนะแก้ปัญหา<b>${c.C}/3</b>${['ปรับปรุง','พอใช้','ดี','ดีมาก'][c.C]}</div>
+  <div>คะแนนวิจัย<b>${c.rAvg.toFixed(1)}/10</b>เวลารวม ${Math.round(tot)} วิ</div>
+ </div>
+ <table><tr><th>ด่าน</th><th>ผู้ลงมือ</th><th>เวลา (วิ)</th><th>ผิด</th><th>เริ่มใหม่</th><th>คำใบ้</th><th>ระดับ</th></tr>
+ ${STAGES.map((s,i)=>{const r=R[s.id];const L_=s.timed?lvl(r,s.id==='s1'?R.sign.minor:0):lvlUntimed(r);return `<tr><td class="l">${i+1}. ${s.short}</td><td class="l">${esc(mName(s.role))}</td><td>${r.lastTime.toFixed(1)}${s.timed?(r.lastTime<=LIMIT?' ✓':' ✗'):''}</td><td>${r.minor}</td><td>${r.restarts}</td><td>${r.hints}</td><td>${L_} ${lvlName(L_)}</td></tr>`}).join('')}
+ </table>
+ <h3>คะแนนตามรูบริก</h3>
+ <table><tr><th>ด้าน</th><th>ประเด็นการประเมิน</th><th>ระดับ</th></tr>
+ ${c.sItems.map(x=>`<tr><td>S</td><td class="l">${x.n}</td><td>${x.l} ${lvlName(x.l)}</td></tr>`).join('')}
+ ${c.aItems.map(x=>`<tr><td>A*</td><td class="l">${x.n}</td><td>${x.l} ${lvlName(x.l)}</td></tr>`).join('')}</table>
+ <h3>คะแนนวิจัยรายสถานการณ์ (เต็ม 10: ถูกต้อง 6 + ไม่พึ่งคำใบ้ 2 + เวลา 2)</h3>
+ <table><tr><th>สถานการณ์</th><th>ถูกต้อง</th><th>ไม่พึ่งคำใบ้</th><th>เวลา</th><th>รวม</th></tr>
+ ${c.rs.map((r,i)=>`<tr><td>${i+1}</td><td>${r.acc}</td><td>${r.hn}</td><td>${r.tm}</td><td><b>${r.tot}</b></td></tr>`).join('')}</table>
+ <h3>จุดที่ทำผิด (ใช้ทบทวน)</h3>
+ ${errs.length?`<ul style="font-size:.84rem;padding-left:18px;margin:4px 0">${errs.join('')}</ul>`:'<p class="pass"><b>ไม่มีจุดผิดเลย ยอดเยี่ยม!</b></p>'}
+ <p class="mute" style="font-size:.78rem">* คะแนน A จากระบบเป็นข้อมูลเบื้องต้นจากการเลือกอุปกรณ์ จุดอันตราย และการคืนสภาพ ครูใช้ประกอบการสังเกตพฤติกรรมจริง · เกณฑ์แปลง S: 10–12=1, 6–9=0.5 · A: 7–8=1, 4–6=0.5</p>
+ </div>
+ <div class="card note">📸 <b>แคปหน้าจอนี้ส่งครู</b> (ถ้ายาวเกินจอ ให้แคป 2 ภาพ ให้เห็นชื่อกลุ่มและรหัสตรวจสอบ)</div>
+ <button class="btn sec block" onclick="modal('<b>ล้างผลของกลุ่มนี้และเริ่มกลุ่มใหม่?</b><p class=mute>แคปหน้าจอส่งครูก่อนนะ</p><button class=\'btn bad\' onclick=\'clearSave();S=null;closeModal();render()\'>ล้างและเริ่มใหม่</button><button class=\'btn sec\' onclick=\'closeModal()\'>ยกเลิก</button>')">เริ่มกลุ่มใหม่</button>`;
+ window.scrollTo(0,0);
+}
+
+function render(){
+ const s=load();
+ if(s&&s.finished){S=s;viewSummary();return}
+ viewReg();
+}
+render();
+</script>
+</body>
+</html>
